@@ -1,4 +1,4 @@
-# STL-to-Voxel Converter
+# MinecraftModelVoxelizer
 
 A tool that converts 3D STL models into voxelized layer images, perfect for building structures in Minecraft layer by layer.
 
@@ -18,8 +18,8 @@ This project takes 3D models in STL format and converts them into a series of 2D
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/STL-to-Voxel.git
-   cd STL-to-Voxel
+   git clone https://github.com/yourusername/MinecraftVoxelizer.git
+   cd MinecraftVoxelizer
    ```
 
 2. Install the required dependencies:
