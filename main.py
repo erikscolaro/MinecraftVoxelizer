@@ -22,7 +22,7 @@ voxel_radius_factor = 6  # Divisor for calculating voxel radius in local voxeliz
 # Mesh repair and smoothing parameters
 taubin_lambda = 0.5  # Lambda parameter for Taubin smoothing
 taubin_nu = -0.53  # Nu parameter for Taubin smoothing
-taubin_iterations = 10  # Iterations for Taubin smoothing
+taubin_iterations = 30  # Iterations for Taubin smoothing
 
 # Image output parameters
 minor_grid_step = 1  # Step size for minor grid lines
@@ -30,6 +30,9 @@ major_grid_step = 10  # Step size for major grid lines
 image_scale_factor = 0.25  # Scale factor for image size
 min_image_size = 8  # Minimum image size in inches
 image_dpi = 100  # DPI for saved images
+
+# Additional global variables for configuration
+remove_filling = False  # Flag to enable/disable empty filling during mesh repair
 
 # Example of working with paths
 input_dir = Path("./input")
@@ -257,6 +260,9 @@ def save_voxel_layers_as_images(matrix, output_dir, base_filename):
     output_path = output_subfolder / f"layer_{i+1:04d}.png"
     fig.savefig(output_path, bbox_inches='tight')
     plt.close(fig)
+    # Print progress to the console
+    if i % 5 == 0 or i == voxel_shape[2] - 1:  # Show progress every 5 layers and for the last layer
+      print(f"Processing layer {i+1}/{voxel_shape[2]} ({(i+1)/voxel_shape[2]*100:.1f}%)")
   
   print(f"Saved {voxel_shape[2]} layer images to {output_subfolder}")
   return output_subfolder
@@ -283,16 +289,17 @@ def process_mesh(selected_file, selected_file_path):
   process_voxel_matrix(matrix, selected_file)
 
 def process_voxel_matrix(matrix, selected_file):
-  # Remove internal voxels to create a shell model
-  print("Removing internal voxels...")
-  original_count = matrix.sum()
-  filtered_matrix = remove_internal_voxels(matrix)
+  if remove_filling:
+    original_count = matrix.sum()
+    # Remove internal voxels to create a shell model
+    print("Removing internal voxels...")
+    filtered_matrix = remove_internal_voxels(matrix)
+    print(f"Original filled voxels: {original_count}")
+    print(f"Filtered filled voxels: {filtered_count}")
+    print(f"Removed internal voxels: {original_count - filtered_count}")
+  else: 
+    filtered_matrix = matrix
   filtered_count = filtered_matrix.sum()
-  
-  # Log statistics
-  print(f"Original filled voxels: {original_count}")
-  print(f"Filtered filled voxels: {filtered_count}")
-  print(f"Removed internal voxels: {original_count - filtered_count}")
   
   # Save voxel layers as images
   output_path = save_voxel_layers_as_images(filtered_matrix, output_dir, selected_file.stem)
