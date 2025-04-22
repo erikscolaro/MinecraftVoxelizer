@@ -79,6 +79,18 @@ The program uses Taubin smoothing for mesh preparation. It's recommended not to 
 - Models with very thin features may not voxelize properly at larger pitch values.
 - The automatic mesh repair can help with some issues, but severely broken meshes may require repair in a 3D modeling program first.
 
+## Example
+
+I tested the voxelizer with the ["Full_assembled.stl" model from Thingiverse](https://www.thingiverse.com/thing:1422363), which is a detailed 3D printable BB-8 droid from Star Wars. After processing the model:
+
+- The voxelization process generated 54 distinct layers
+- Each layer was saved as a separate image with grid lines for easy block placement
+- The complete build process can be visualized in the animation below:
+
+![BB-8 Layer Building Process](./examples/BB8_animation.gif)
+
+(TODO: Time to convince my friends I'm a Minecraft architect when I'm really just following these fancy pictures! 🏗️)
+
 ## License
 
 [MIT License](LICENSE)
