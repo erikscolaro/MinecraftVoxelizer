@@ -16,7 +16,7 @@ voxelization_method = 2
 debug = False
 
 # Voxelization parameters
-pitch = 1  # Adjust this value based on your needs (smaller value = higher resolution)
+pitch = 2  # Adjust this value based on your needs (smaller value = higher resolution)
 voxel_radius_factor = 6  # Divisor for calculating voxel radius in local voxelization
 
 # Mesh repair and smoothing parameters
@@ -30,6 +30,7 @@ major_grid_step = 10  # Step size for major grid lines
 image_scale_factor = 0.25  # Scale factor for image size
 min_image_size = 8  # Minimum image size in inches
 image_dpi = 100  # DPI for saved images
+center_grid_on_cubes = False
 
 # Additional global variables for configuration
 remove_filling = False  # Flag to enable/disable empty filling during mesh repair
@@ -227,13 +228,13 @@ def save_voxel_layers_as_images(matrix, output_dir, base_filename):
     output_subfolder.mkdir(parents=True)
 
   # Pre-calculate ticks and labels once instead of for each layer
-  x_major_ticks = [i - 0.5 for i in range(0, matrix.shape[1] + 1, major_grid_step)]
-  x_minor_ticks = [i - 0.5 for i in range(0, matrix.shape[1] + 1, minor_grid_step)]
-  y_major_ticks = [i - 0.5 for i in range(0, matrix.shape[0] + 1, major_grid_step)]
-  y_minor_ticks = [i - 0.5 for i in range(0, matrix.shape[0] + 1, minor_grid_step)]
+  x_major_ticks = [i  for i in range(0, matrix.shape[1], major_grid_step)]
+  x_minor_ticks = [i  for i in range(0, matrix.shape[1], minor_grid_step)]
+  y_major_ticks = [i  for i in range(0, matrix.shape[0], major_grid_step)]
+  y_minor_ticks = [i  for i in range(0, matrix.shape[0], minor_grid_step)]
 
-  x_major_labels = [str(int(x + 0.5)) if (x + 0.5) % major_grid_step == 0 else '' for x in x_major_ticks]
-  y_major_labels = [str(int(y + 0.5)) if (y + 0.5) % major_grid_step == 0 else '' for y in y_major_ticks]
+  x_major_labels = [str(int(x )) if (x ) % major_grid_step == 0 else '' for x in x_major_ticks]
+  y_major_labels = [str(int(y )) if (y ) % major_grid_step == 0 else '' for y in y_major_ticks]
 
   # Calculate figure size dynamically based on matrix dimensions
   fig_width = max(min_image_size, matrix.shape[1] * image_scale_factor)
@@ -242,7 +243,20 @@ def save_voxel_layers_as_images(matrix, output_dir, base_filename):
   # Save each layer as an image
   for i in range(voxel_shape[2]):
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=image_dpi)
-    ax.imshow(~matrix[:, :, i], cmap="gray")
+    # Overlay previous layer in light gray if not the first layer
+    if i > 0:
+      # Show previous layer as light gray squares with high transparency
+      previous_layer = matrix[:, :, i-1]
+      ax.imshow(~previous_layer, cmap="gray", alpha=0.33)  # Lower alpha for previous layer
+    
+    # Show current layer with higher opacity
+    ax.imshow(~matrix[:, :, i], cmap="gray", alpha=0.66)  # Higher alpha for current layer
+
+    # Add white dots at positions where matrix is True
+    for y in range(matrix.shape[0]):
+      for x in range(matrix.shape[1]):
+        if matrix[y, x, i]:  # If this voxel is filled
+            ax.plot(x, y, 'o', color='white', markersize=7, markeredgecolor='gray')
     ax.set_title(f"Layer {i+1} of {voxel_shape[2]}")
     # Set up grid and ticks
     ax.set_xticks(x_major_ticks)
@@ -294,6 +308,7 @@ def process_voxel_matrix(matrix, selected_file):
     # Remove internal voxels to create a shell model
     print("Removing internal voxels...")
     filtered_matrix = remove_internal_voxels(matrix)
+    filtered_count = filtered_matrix.sum()
     print(f"Original filled voxels: {original_count}")
     print(f"Filtered filled voxels: {filtered_count}")
     print(f"Removed internal voxels: {original_count - filtered_count}")
