@@ -258,6 +258,62 @@ def save_voxel_layers_as_images(matrix, output_dir, base_filename):
         if matrix[y, x, i]:  # If this voxel is filled
             ax.plot(x, y, 'o', color='white', markersize=7, markeredgecolor='gray')
     ax.set_title(f"Layer {i+1} of {voxel_shape[2]}")
+
+    # Apply edge detection to find significant edges
+    def detect_edges(layer):
+      # Create horizontal and vertical edge filters
+      horizontal_edges = np.zeros_like(layer, dtype=bool)
+      vertical_edges = np.zeros_like(layer, dtype=bool)
+      
+      # Detect horizontal transitions (left to right)
+      for y in range(layer.shape[0]):
+        for x in range(1, layer.shape[1]):
+          if layer[y, x] != layer[y, x-1]:
+            horizontal_edges[y, x] = True
+      
+      # Detect vertical transitions (top to bottom)
+      for x in range(layer.shape[1]):
+        for y in range(1, layer.shape[0]):
+          if layer[y, x] != layer[y-1, x]:
+            vertical_edges[y, x] = True
+      
+      return horizontal_edges, vertical_edges
+
+    # Add edge measurements to the plot
+    horizontal_edges, vertical_edges = detect_edges(matrix[:, :, i])
+
+    # Measure horizontal segments (width of features)
+    for y in range(matrix.shape[0]):
+      start_x = None
+      for x in range(matrix.shape[1]):
+        if matrix[y, x, i] and start_x is None:
+          start_x = x
+        elif (not matrix[y, x, i] or x == matrix.shape[1]-1) and start_x is not None:
+          end_x = x - 1 if not matrix[y, x, i] else x
+          width = end_x - start_x + 1
+          if width > 2:  # Only label segments larger than 2 units
+            mid_x = (start_x + end_x) / 2
+            ax.annotate(f"{width}", xy=(mid_x, y), xytext=(mid_x+1, y-3),
+              ha='center', va='bottom', fontsize=12, weight='bold', color='dodgerblue',
+              arrowprops=dict(arrowstyle='->', color='blue', lw=1))
+          start_x = None
+
+    # Measure vertical segments (height of features)
+    for x in range(matrix.shape[1]):
+      start_y = None
+      for y in range(matrix.shape[0]):
+        if matrix[y, x, i] and start_y is None:
+          start_y = y
+        elif (not matrix[y, x, i] or y == matrix.shape[0]-1) and start_y is not None:
+          end_y = y - 1 if not matrix[y, x, i] else y
+          height = end_y - start_y + 1
+          if height > 2:  # Only label segments larger than 2 units
+            mid_y = (start_y + end_y) / 2
+            ax.annotate(f"{height}", xy=(x, mid_y), xytext=(x+3, mid_y-1),
+              ha='left', va='center', fontsize=12, weight='bold', color='tomato',
+              arrowprops=dict(arrowstyle='->', color='red', lw=1))
+          start_y = None
+
     # Set up grid and ticks
     ax.set_xticks(x_major_ticks)
     ax.set_xticklabels(x_major_labels)

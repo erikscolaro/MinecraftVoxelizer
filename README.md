@@ -79,6 +79,12 @@ The program uses Taubin smoothing for mesh preparation. It's recommended not to 
 - Models with very thin features may not voxelize properly at larger pitch values.
 - The automatic mesh repair can help with some issues, but severely broken meshes may require repair in a 3D modeling program first.
 
+## Update
+
+The latest update has modified the image generation algorithm to make them easier to read and build. Here's an example:
+
+![Visualization improved](./examples/layer_0017.png)
+
 ## Example
 
 I tested the voxelizer with the ["Full_assembled.stl" model from Thingiverse](https://www.thingiverse.com/thing:1422363), which is a detailed 3D printable BB-8 droid from Star Wars. After processing the model:
